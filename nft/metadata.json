@@ -1,0 +1,11 @@
+{
+  "name": "CATAHOLIC",
+  "description": "This is CAT",
+  "image": "ipfs://QmNze3788KVN7cUsyRndESaajNQxPF9B5wa4dPko5aoDyy",
+  "attributes": [
+    {
+      "trait_type": "cuteness",
+      "value": 100
+    }
+  ]
+}
