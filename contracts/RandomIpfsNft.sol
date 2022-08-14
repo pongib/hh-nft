@@ -4,11 +4,11 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extension/ERC721URIStorage.sol";
 
 error RandomIpfsNft__BreedOutOfRange();
 
-contract RandomIpfsNft is VRFConsumerBaseV2, ERC721 {
+contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
     /* feat
       1. Mint with random from vrf
       2. NFT have rare level with 3 type
@@ -36,17 +36,20 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721 {
     // NFT variable
     uint256 private s_tokenCounter;
     uint8 internal constant MAX_CHANCE = 100;
+    string[3] internal s_tokenURIs;
 
     constructor(
         address vrfCoordinator,
         bytes32 gasLane,
         uint64 subscriptionId,
-        uint32 callbackGasLimit
+        uint32 callbackGasLimit,
+        string[3] memory tokenURIs
     ) VRFConsumerBaseV2(vrfCoordinator) ERC721("VRF IPFS NFT", "VIN") {
         i_vrfCoordintor = VRFCoordinatorV2Interface(vrfCoordinator);
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        s_tokenURIs = tokenURIs;
     }
 
     function mintNft() public returns (uint256 requestId) {
@@ -66,8 +69,10 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721 {
         address owner = s_vrfRequestIdToOwner[requestId];
         uint256 tokenCounter = s_tokenCounter;
         // calculate breed\
+
         Breed randomBreed = getBreedFromRng(randomWords[0]);
         _safeMint(owner, tokenCounter);
+        _setTokenURI(tokenCounter, tokenURIs[uint8(randomBreed)]);
         s_tokenCounter++;
     }
 
