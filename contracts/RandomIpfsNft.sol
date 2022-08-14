@@ -4,11 +4,14 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
-import "@openzeppelin/contracts/token/ERC721/extension/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 error RandomIpfsNft__BreedOutOfRange();
+error RandomIpfsNft__BelowMintFee();
+error RandomIpfsNft__WithdrawFail();
 
-contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
+contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     /* feat
       1. Mint with random from vrf
       2. NFT have rare level with 3 type
@@ -35,24 +38,30 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
 
     // NFT variable
     uint256 private s_tokenCounter;
-    uint8 internal constant MAX_CHANCE = 100;
-    string[3] internal s_tokenURIs;
+    uint8 constant MAX_CHANCE = 100;
+    string[3] s_tokenURIs;
+    uint256 private immutable i_mintFee;
 
     constructor(
         address vrfCoordinator,
         bytes32 gasLane,
         uint64 subscriptionId,
         uint32 callbackGasLimit,
-        string[3] memory tokenURIs
+        string[3] memory tokenURIs,
+        uint256 mintFee
     ) VRFConsumerBaseV2(vrfCoordinator) ERC721("VRF IPFS NFT", "VIN") {
         i_vrfCoordintor = VRFCoordinatorV2Interface(vrfCoordinator);
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
         s_tokenURIs = tokenURIs;
+        i_mintFee = mintFee;
     }
 
-    function mintNft() public returns (uint256 requestId) {
+    function mintNft() public payable returns (uint256 requestId) {
+        if (msg.value < i_mintFee) {
+            revert RandomIpfsNft__BelowMintFee();
+        }
         requestId = i_vrfCoordintor.requestRandomWords(
             i_gasLane,
             i_subscriptionId,
@@ -72,8 +81,16 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
 
         Breed randomBreed = getBreedFromRng(randomWords[0]);
         _safeMint(owner, tokenCounter);
-        _setTokenURI(tokenCounter, tokenURIs[uint8(randomBreed)]);
+        _setTokenURI(tokenCounter, s_tokenURIs[uint8(randomBreed)]);
         s_tokenCounter++;
+    }
+
+    function withdrawFee() external onlyOwner {
+        uint256 amount = address(this).balance;
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        if (!success) {
+            revert RandomIpfsNft__WithdrawFail();
+        }
     }
 
     /* Chance
@@ -102,5 +119,15 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage {
         return [10, 20, 70]; // 10% 20% 70%
     }
 
-    function tokenURI(uint256) public view override returns (string memory) {}
+    function getMintFee() public view returns (uint256) {
+        return i_mintFee;
+    }
+
+    function getTokenURIs(uint8 index) public view returns (string memory) {
+        return s_tokenURIs[index];
+    }
+
+    function getTokenCounter() public view returns (uint256) {
+        return s_tokenCounter;
+    }
 }
