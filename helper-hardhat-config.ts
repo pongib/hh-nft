@@ -1,3 +1,5 @@
+import { ethers } from "hardhat"
+
 export interface networkConfigItem {
   ethUsdPriceFeed?: string
   blockConfirmation?: number
