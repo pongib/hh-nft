@@ -3,6 +3,8 @@ import { HardhatRuntimeEnvironment } from "hardhat/types"
 import verify from "../utils/verify"
 import { DeployFunction } from "hardhat-deploy/dist/types"
 import { storeImages, storeTokenURIMetadata } from "../utils/uploadToPinata"
+import { VRFConsumerBaseV2 } from "../typechain-types"
+import { VRFCoordinatorV2Mock } from "../typechain-types/@chainlink/contracts/src/v0.8/mocks"
 
 const RandomIpfsNft: DeployFunction = async (
   hre: HardhatRuntimeEnvironment
@@ -12,50 +14,61 @@ const RandomIpfsNft: DeployFunction = async (
   const [deployer] = await ethers.getSigners()
   const chainId = network.config.chainId!
   const mintFee = ethers.utils.parseEther("0.01")
+  const fundSubcription = ethers.utils.parseEther("10")
+  // get from handle token uris
+  const tokenURIs = [
+    "ipfs://QmfJdQFZ7iRmSDY3mdssiv758C5j3UWMq3B412Gb3SEa7v",
+    "ipfs://QmTEa4gXCDUAv4MzK4BNJqEZbj3c6cbCkbchpejVMvVb94",
+    "ipfs://QmbiwR24vepWcoxNxvD92nP8jLSrW1j2JvDZNa6TNjgvZn",
+  ]
 
   const {
     vrfCoordinatorV2,
     subscriptionId: subIdMock,
     gasLane,
     callbackGasLimit,
+    waitBlockConfirmations,
   } = networkConfig[chainId]
+
   let vrfCoordinatorV2Address
   let subscriptionId
 
   if (process.env.STORE_PINATA == "true") await handleTokenURIs()
   if (developmentChainId.includes(chainId)) {
     log("----- Deploy Mock -----")
-    const vrfCoordinatorV2 = await ethers.getContract("VRFCoordinatorV2Mock")
+    const vrfCoordinatorV2: VRFCoordinatorV2Mock = await ethers.getContract(
+      "VRFCoordinatorV2Mock"
+    )
     vrfCoordinatorV2Address = vrfCoordinatorV2.address
     const tx = await vrfCoordinatorV2.createSubscription()
     const txReceipt = await tx.wait()
-    subscriptionId = txReceipt.events[0].args.subId
+    subscriptionId = txReceipt.events![0].args!.subId
+    await vrfCoordinatorV2.fundSubscription(subscriptionId, fundSubcription)
   } else {
     vrfCoordinatorV2Address = vrfCoordinatorV2
     subscriptionId = subIdMock
   }
   log("------ Start Deploy ------")
-  console.log(typeof process.env.STORE_PINATA)
 
-  // const args: any[] = [
-  //   vrfCoordinatorV2Address,
-  //   gasLane,
-  //   subscriptionId,
-  //   callbackGasLimit,
-  //   // tokenURIs,
-  //   mintFee,
-  // ]
-  // const randomIpfsNft = await deploy("RandomIpfsNft", {
-  //   from: deployer.address,
-  //   args,
-  //   log: true,
-  //   waitConfirmations: networkConfig[chainId].waitBlockConfirmations,
-  // })
-  // log("------ Deploy Completed -----")
-  // if (!developmentChainId.includes(chainId) && process.env.ETHERSCAN_API_KEY) {
-  //   log("------ Verify -----")
-  //   await verify(randomIpfsNft.address, args)
-  // }
+  const args: any[] = [
+    vrfCoordinatorV2Address,
+    gasLane,
+    subscriptionId,
+    callbackGasLimit,
+    tokenURIs,
+    mintFee,
+  ]
+  const randomIpfsNft = await deploy("RandomIpfsNft", {
+    from: deployer.address,
+    args,
+    log: true,
+    waitConfirmations: waitBlockConfirmations,
+  })
+  log("------ Deploy Completed -----")
+  if (!developmentChainId.includes(chainId) && process.env.ETHERSCAN_API_KEY) {
+    log("------ Verify -----")
+    await verify(randomIpfsNft.address, args)
+  }
 }
 
 async function handleTokenURIs() {

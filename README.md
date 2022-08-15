@@ -1,13 +1,7 @@
-# Sample Hardhat Project
+We go through creating 3 different kinds of NFTs.
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-GAS_REPORT=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
-```
+1. A Basic NFT
+2. IPFS Hosted NFT
+   1. That uses Randomness to generate a unique NFT
+3. SVG NFT (Hosted 100% on-chain)
+   1. Uses price feeds to be dynamic

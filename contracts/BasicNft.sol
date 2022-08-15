@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 contract BasicNft is ERC721 {
     string private constant TOKEN_URI =
         "ipfs://QmXH5bWe8K8N5vQzP59mFCzKqF87aSX2vjMeqY7phGHT4E";
+
     uint256 private s_tokenCounter;
 
     constructor() ERC721("CATAHOLIC", "CTH") {
