@@ -36,7 +36,7 @@ export const networkConfig: networkConfigInfo = {
     blockConfirmation: 6,
     chainId: 4,
     name: "rinkeby",
-    subscriptionId: "588",
+    subscriptionId: "10660",
     gasLane:
       "0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc", // 30 gwei
     keepersUpdateInterval: "30",
@@ -49,6 +49,9 @@ export const networkConfig: networkConfigInfo = {
 }
 
 export const developmentChainId = [31337]
+
+export const DECIMALS = "18"
+export const INITIAL_PRICE = "200000000000000000000"
 
 export const frontEndAbiFile = "../next-lottery/constants/abi.json"
 export const frontEndContractsFile =
