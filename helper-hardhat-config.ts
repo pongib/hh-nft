@@ -14,6 +14,7 @@ export interface networkConfigItem {
   verifyBlockNumber?: number
   fundAmount?: string
   waitBlockConfirmations?: number
+  ethPriceFeedAddress?: string
 }
 
 export interface networkConfigInfo {
@@ -47,6 +48,7 @@ export const networkConfig: networkConfigInfo = {
     vrfCoordinatorV2: "0x6168499c0cFfCaCD319c818142124B7A15E857ab",
     verifyBlockNumber: 6,
     waitBlockConfirmations: 6,
+    ethPriceFeedAddress: "0x8A753747A1Fa494EC906cE90E9f37563A8AF630e",
   },
 }
 
