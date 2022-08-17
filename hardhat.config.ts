@@ -1,15 +1,18 @@
-import { HardhatUserConfig } from "hardhat/config";
-import "@nomicfoundation/hardhat-toolbox";
-import "@nomiclabs/hardhat-ethers";
-import "@nomicfoundation/hardhat-chai-matchers";
-import "hardhat-deploy";
-import "dotenv/config";
+import { HardhatUserConfig } from "hardhat/config"
+import "@nomicfoundation/hardhat-toolbox"
+import "@nomiclabs/hardhat-ethers"
+import "@nomicfoundation/hardhat-chai-matchers"
+import "hardhat-deploy"
+import "dotenv/config"
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY!;
+const PRIVATE_KEY = process.env.PRIVATE_KEY!
 
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
+      {
+        version: "0.8.16",
+      },
       {
         version: "0.8.9",
       },
@@ -51,6 +54,6 @@ const config: HardhatUserConfig = {
   mocha: {
     timeout: 500000,
   },
-};
+}
 
-export default config;
+export default config
