@@ -38,4 +38,4 @@ const deployMocks: DeployFunction = async function (
   }
 }
 export default deployMocks
-deployMocks.tags = ["all", "mocks", "main"]
+deployMocks.tags = ["all", "mocks"]

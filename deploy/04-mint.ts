@@ -46,9 +46,8 @@ const mint: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await new Promise<void>(async (resolve, reject) => {
     try {
       // 5 minutes for timeout
-      // setTimeout(() => reject("Timeout occur"), 300000)
+      setTimeout(() => reject("Timeout occur"), 300000)
 
-      setTimeout(() => reject("Timeout occur"), 60000)
       // listener for event
       randomIpfsNft.once("NftMint", async () => {
         resolve()

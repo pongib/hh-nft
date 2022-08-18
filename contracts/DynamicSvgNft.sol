@@ -12,8 +12,7 @@ contract DynamicSvgNft is ERC721 {
     uint256 private s_tokenCounter;
     string private i_lowImageURI;
     string private i_highImageURI;
-    string private constant ENCODE_BASE64_PREFIX =
-        "data:image//svg+xml;base64,";
+    string private constant ENCODE_BASE64_PREFIX = "data:image/svg+xml;base64,";
     mapping(uint256 => int256) public s_tokenIdToPriceExpect;
     AggregatorV3Interface private immutable i_priceFeed;
 
@@ -35,19 +34,17 @@ contract DynamicSvgNft is ERC721 {
         pure
         returns (string memory)
     {
-        string memory encoded = Base64.encode(
-            bytes(string(abi.encodePacked(svg)))
-        );
+        string memory encoded = Base64.encode(abi.encodePacked(svg));
 
         return string(abi.encodePacked(ENCODE_BASE64_PREFIX, encoded));
     }
 
     function mintNft(int256 expectPrice) public {
         uint256 tokenId = s_tokenCounter;
+        s_tokenCounter++;
         // set price criteria for display svg
         s_tokenIdToPriceExpect[tokenId] = expectPrice;
         _safeMint(msg.sender, tokenId);
-        s_tokenCounter++;
         emit NftMint(msg.sender, tokenId, expectPrice);
     }
 
@@ -65,7 +62,7 @@ contract DynamicSvgNft is ERC721 {
             revert DynamicSvgNft__NotExistTokenId();
         }
 
-        string memory imageURI = i_lowImageURI;
+        string memory imageURI = i_highImageURI;
 
         (, int256 price, , , ) = i_priceFeed.latestRoundData();
 
@@ -81,7 +78,7 @@ contract DynamicSvgNft is ERC721 {
                         abi.encodePacked(
                             '{"name":"',
                             name(),
-                            '", "descripton":"An NFT art base on chainlink feed", ',
+                            '", "description":"An NFT art base on chainlink feed", ',
                             '"attributes": [{"trait_type": "coolness", "value": 100}], ',
                             '"image":"',
                             imageURI,

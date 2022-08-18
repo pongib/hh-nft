@@ -26,10 +26,10 @@ const deployDynamicSvgNft: DeployFunction = async (
     encoding: "utf8",
   })
 
-  const highSvg = fs.readFileSync("./images/dynamicNft/frown.svg", "utf8")
+  const highSvg = fs.readFileSync("./images/dynamicNft/happy.svg", "utf8")
   const args = [ethUsdPriceFeedAddress, lowSvg, highSvg]
 
-  const dynamicSvgNft = await deploy("DynamicSvgNft", {
+  const dynamicSvgNft = await deploy("DynamicSvgNft_temp", {
     from: deployer.address,
     args: args,
     log: true,

@@ -32,14 +32,12 @@ const RandomIpfsNft: DeployFunction = async (
 
   let vrfCoordinatorV2Address
   let subscriptionId
-  let vrfCoordinatorV2Mock: VRFCoordinatorV2Mock = await ethers.getContract(
-    "VRFCoordinatorV2Mock"
-  )
+  let vrfCoordinatorV2Mock!: VRFCoordinatorV2Mock
 
   if (process.env.STORE_PINATA == "true") await handleTokenURIs()
   if (developmentChainId.includes(chainId)) {
     log("----- Deploy Mock -----")
-
+    vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
     vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
     const tx = await vrfCoordinatorV2Mock.createSubscription()
     const txReceipt = await tx.wait()
@@ -88,10 +86,12 @@ async function handleTokenURIs() {
     name: "",
     description: "",
     image: "",
-    attributes: {
-      trait_type: "Cuteness",
-      value: "100",
-    },
+    attributes: [
+      {
+        trait_type: "Cuteness",
+        value: "100",
+      },
+    ],
   }
 
   const imagesPath = "./images/randomNft"
