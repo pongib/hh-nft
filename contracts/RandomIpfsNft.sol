@@ -6,6 +6,7 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
 
 error RandomIpfsNft__BreedOutOfRange();
 error RandomIpfsNft__BelowMintFee();
@@ -76,6 +77,8 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
             NUM_WORDS
         );
 
+        s_vrfRequestIdToOwner[requestId] = msg.sender;
+
         emit NftRequest(msg.sender, requestId);
     }
 
@@ -83,14 +86,22 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         internal
         override
     {
+        require(false, "ERRRRRRRRR");
         address owner = s_vrfRequestIdToOwner[requestId];
         uint256 tokenCounter = s_tokenCounter;
         // calculate breed\
-
         Breed randomBreed = getBreedFromRng(randomWords[0]);
+        console.log("randomBreed", uint256(randomBreed));
+        console.log("owner", owner);
+        console.log("tokenCounter", tokenCounter);
         _safeMint(owner, tokenCounter);
+        console.log(
+            "s_tokenURIs[uint8(randomBreed)]",
+            s_tokenURIs[uint8(randomBreed)]
+        );
         _setTokenURI(tokenCounter, s_tokenURIs[uint8(randomBreed)]);
         s_tokenCounter++;
+        console.log("event");
         emit NftMint(owner, tokenCounter, randomBreed);
     }
 

@@ -23,7 +23,7 @@ const RandomIpfsNft: DeployFunction = async (
   ]
 
   const {
-    vrfCoordinatorV2,
+    vrfCoordinatorV2: vrfCoordinatorV2AddressConfig,
     subscriptionId: subIdMock,
     gasLane,
     callbackGasLimit,
@@ -32,20 +32,23 @@ const RandomIpfsNft: DeployFunction = async (
 
   let vrfCoordinatorV2Address
   let subscriptionId
+  let vrfCoordinatorV2Mock: VRFCoordinatorV2Mock = await ethers.getContract(
+    "VRFCoordinatorV2Mock"
+  )
 
   if (process.env.STORE_PINATA == "true") await handleTokenURIs()
   if (developmentChainId.includes(chainId)) {
     log("----- Deploy Mock -----")
-    const vrfCoordinatorV2: VRFCoordinatorV2Mock = await ethers.getContract(
-      "VRFCoordinatorV2Mock"
-    )
-    vrfCoordinatorV2Address = vrfCoordinatorV2.address
-    const tx = await vrfCoordinatorV2.createSubscription()
+
+    vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
+    const tx = await vrfCoordinatorV2Mock.createSubscription()
     const txReceipt = await tx.wait()
     subscriptionId = txReceipt.events![0].args!.subId
-    await vrfCoordinatorV2.fundSubscription(subscriptionId, fundSubcription)
+    console.log("subscriptionId", subscriptionId.toString())
+
+    await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, fundSubcription)
   } else {
-    vrfCoordinatorV2Address = vrfCoordinatorV2
+    vrfCoordinatorV2Address = vrfCoordinatorV2AddressConfig
     subscriptionId = subIdMock
   }
   log("------ Start Deploy ------")
@@ -64,6 +67,14 @@ const RandomIpfsNft: DeployFunction = async (
     log: true,
     waitConfirmations: waitBlockConfirmations,
   })
+
+  if (developmentChainId.includes(chainId)) {
+    await vrfCoordinatorV2Mock.addConsumer(
+      subscriptionId,
+      randomIpfsNft.address
+    )
+  }
+
   log("------ Deploy Completed -----")
   if (!developmentChainId.includes(chainId) && process.env.ETHERSCAN_API_KEY) {
     log("------ Verify -----")
@@ -107,4 +118,4 @@ async function handleTokenURIs() {
 }
 
 export default RandomIpfsNft
-RandomIpfsNft.tags = ["randomIpfs", "all"]
+RandomIpfsNft.tags = ["randomIpfs", "all", "main"]
