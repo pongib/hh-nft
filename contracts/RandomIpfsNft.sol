@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 error RandomIpfsNft__BreedOutOfRange();
 error RandomIpfsNft__BelowMintFee();
 error RandomIpfsNft__WithdrawFail();
+error RandomIpfsNft__AlreadyInitialize();
 
 contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     /* feat
@@ -39,8 +40,9 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
     // NFT variable
     uint256 private s_tokenCounter;
     uint8 constant MAX_CHANCE = 100;
-    string[3] s_tokenURIs;
+    string[3] private s_tokenURIs;
     uint256 private immutable i_mintFee;
+    bool private s_initialized = false;
 
     // event
     event NftRequest(address indexed requester, uint256 requestId);
@@ -60,11 +62,17 @@ contract RandomIpfsNft is VRFConsumerBaseV2, ERC721URIStorage, Ownable {
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
-        s_tokenURIs = tokenURIs;
+        _initializeTokenURIs(tokenURIs);
         i_mintFee = mintFee;
     }
 
-    function _initialize(string[3] memory tokenURIs) private {}
+    function _initializeTokenURIs(string[3] memory tokenURIs) private {
+        if (s_initialized == true) {
+            revert RandomIpfsNft__AlreadyInitialize();
+        }
+        s_tokenURIs = tokenURIs;
+        s_initialized = true;
+    }
 
     function requestNft() public payable returns (uint256 requestId) {
         if (msg.value < i_mintFee) {
