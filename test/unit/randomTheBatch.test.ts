@@ -3,54 +3,49 @@
 import { assert, expect } from "chai"
 import { network, deployments, ethers } from "hardhat"
 import { developmentChainId } from "../../helper-hardhat-config"
-import { RandomIpfsNft, VRFCoordinatorV2Mock } from "../../typechain-types"
+import { RandomTheBatch, VRFCoordinatorV2Mock } from "../../typechain-types"
 
 !developmentChainId.includes(network.config?.chainId!)
   ? describe.skip
-  : describe("Random IPFS NFT Unit Tests", function () {
-      let randomIpfsNft: RandomIpfsNft,
+  : describe("Random The Batch Unit Tests", function () {
+      let randomTheBatch: RandomTheBatch,
         deployer,
         vrfCoordinatorV2Mock: VRFCoordinatorV2Mock
 
       beforeEach(async () => {
         const accounts = await ethers.getSigners()
         deployer = accounts[0]
-        await deployments.fixture(["mocks", "randomipfs"])
-        randomIpfsNft = await ethers.getContract("RandomIpfsNft")
+        await deployments.fixture(["mocks", "randomTheBatch"])
+        randomTheBatch = await ethers.getContract("RandomTheBatch")
         vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
-      })
-
-      describe("constructor", function () {
-        it("sets starting values correctly", async function () {
-          const dogTokenUriZero = await randomIpfsNft.getTokenURIs(0)
-          // const isInitialized = await randomIpfsNft.getInitialized()
-          assert(dogTokenUriZero.includes("ipfs://"))
-          // assert.equal(isInitialized, true)
-        })
       })
 
       describe("requestNft", function () {
         it("fails if payment isn't sent with the request", async function () {
-          await expect(randomIpfsNft.requestNft()).to.be.revertedWith(
-            "NeedMoreETHSent"
+          await expect(
+            randomTheBatch.requestNft(10)
+          ).to.be.revertedWithCustomError(
+            randomTheBatch,
+            "RandomTheBatch__BelowMintFee"
           )
         })
         it("emits and event and kicks off a random word request", async function () {
-          const fee = await randomIpfsNft.getMintFee()
+          const fee = await randomTheBatch.getMintFee()
           await expect(
-            randomIpfsNft.requestNft({ value: fee.toString() })
-          ).to.emit(randomIpfsNft, "NftRequested")
+            randomTheBatch.requestNft(10, { value: fee.mul(10) })
+          ).to.emit(randomTheBatch, "NftRequest")
         })
       })
+
       describe("fulfillRandomWords", function () {
         it("mints NFT after random number returned", async function () {
           await new Promise<void>(async (resolve, reject) => {
-            randomIpfsNft.once("NftMint", async () => {
+            randomTheBatch.once("NftMint", async () => {
               try {
-                const tokenUri = await randomIpfsNft.tokenURI(0)
-                const tokenCounter = await randomIpfsNft.getTokenCounter()
-                assert.equal(tokenUri.toString().includes("ipfs://"), true)
-                assert.equal(tokenCounter.toString(), "1")
+                const tokenUri = await randomTheBatch.tokenURI(0)
+                expect(tokenUri.toString().includes("ipfs://")).to.be.true
+
+                expect(await randomTheBatch.getTotalMinted()).to.equal(10)
                 resolve()
               } catch (e) {
                 console.log(e)
@@ -58,14 +53,14 @@ import { RandomIpfsNft, VRFCoordinatorV2Mock } from "../../typechain-types"
               }
             })
             try {
-              const fee = await randomIpfsNft.getMintFee()
-              const requestNftResponse = await randomIpfsNft.requestNft({
-                value: fee.toString(),
+              const fee = await randomTheBatch.getMintFee()
+              const requestNftResponse = await randomTheBatch.requestNft(10, {
+                value: fee.mul(10),
               })
               const requestNftReceipt = await requestNftResponse.wait(1)
               await vrfCoordinatorV2Mock.fulfillRandomWords(
                 requestNftReceipt.events![1].args!.requestId,
-                randomIpfsNft.address
+                randomTheBatch.address
               )
             } catch (e) {
               console.log(e)
